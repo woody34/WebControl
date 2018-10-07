@@ -143,8 +143,231 @@ namespace WebControl
             }
             else
             {
-                //start the bot
+                if (isLoginAvailable())
+                {
+                    login();
+                }
             }
+        }
+
+        //Bot Actions
+        private bool isPageWim()
+        {
+            HtmlDocument html = webBrowser.Document as HtmlDocument;
+
+            bool titleHasWebImageMonitor = false;
+
+            titleHasWebImageMonitor = (html.Title.Contains("Web Image Monitor")) ? true : false;
+
+            if (titleHasWebImageMonitor)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        private bool isConfigAvailable()
+        {
+            HtmlDocument html;
+
+            while (webBrowser.IsLoaded.Equals(false))
+            {
+                System.Threading.Thread.Sleep(100);
+            }
+
+            html = webBrowser.Document as HtmlDocument;
+
+            HtmlElementCollection anchors = html.GetElementsByTagName("a");
+
+            foreach(HtmlElement a in anchors)
+            {
+                if (a.OuterText.Equals("Configuration"))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Looks for the anchor tag to login
+        /// </summary>
+        /// <returns>true if anchor tag is present</returns>
+        private bool isLoginAvailable()
+        {
+            HtmlDocument html = webBrowser.Document as HtmlDocument;
+
+            bool isLogIn = false;
+
+            string loginURL = "/web/guest/en/websys/webArch/authForm.cgi";
+
+            HtmlElementCollection anchors = html.GetElementsByTagName("a");
+
+            foreach(HtmlElement a in anchors)
+            {
+                string href = a.GetAttribute("href");
+                
+                if(href.Contains(loginURL))
+                {
+                    isLogIn = true; 
+                }
+                 
+            }
+
+            return (isLogIn) ? true : false;
+        }
+
+        /// <summary>
+        /// Looks for the anchor tag to logout
+        /// </summary>
+        /// <returns>true if anchor tag is present</returns>
+        private bool isLogoutAvailable()
+        {
+            HtmlDocument html = webBrowser.Document as HtmlDocument;
+
+            bool isLoggedIn = false;
+
+            string logoutURL = "/web/entry/en/websys/webArch/logout.cgi";
+
+            HtmlElementCollection anchors = html.GetElementsByTagName("a");
+
+            foreach (HtmlElement a in anchors)
+            {
+                string href = a.GetAttribute("href");
+
+                if (href.Contains(logoutURL))
+                {
+                    isLoggedIn = true;
+                }
+
+            }
+
+            return (isLoggedIn) ? true : false;
+        }
+
+        /// <summary>
+        /// Navigates to the login screen and logs in as admin with default credentials
+        /// </summary>
+        /// <returns>a bool of success</returns>
+        private bool login()
+        {
+            HtmlDocument html;
+
+            while (webBrowser.IsLoaded.Equals(false))
+            {
+                System.Threading.Thread.Sleep(100);
+            }
+
+            if (isLoginAvailable())
+            {
+                html = webBrowser.Document as HtmlDocument;
+
+                HtmlElementCollection anchors = html.GetElementsByTagName("a");
+
+                string loginURL = "/web/guest/en/websys/webArch/authForm.cgi";
+
+                //find login anchor and invoke click
+                foreach (HtmlElement a in anchors)
+                {
+                    string href = a.GetAttribute("href");
+
+                    if (href.Contains(loginURL))
+                    {
+                        a.InvokeMember("click");
+
+                        break;
+                    }
+                }
+            }
+
+            while (webBrowser.IsLoaded.Equals(false))
+            {
+                System.Threading.Thread.Sleep(100);
+            }
+
+            html = webBrowser.Document as HtmlDocument;
+
+            HtmlElementCollection inputs = html.GetElementsByTagName("input");
+
+            //find input for User Name & input default username
+            foreach (HtmlElement input in inputs)
+            {
+                //find input for admin loging
+                if (input.Name.Contains("userid_work"))
+                {
+                    //set value attribute to admin
+                    input.SetAttribute("value", "admin");
+                }
+
+            }
+
+            //find login input and invoke click
+            foreach (HtmlElement input in inputs)
+            {
+                if (input.GetAttribute("value").Equals("Login"))
+                {
+                    input.InvokeMember("click");
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool navConfig()
+        {
+            HtmlDocument html;
+
+            while (webBrowser.IsLoaded.Equals(false))
+            {
+                System.Threading.Thread.Sleep(100);
+            }
+
+            html = webBrowser.Document as HtmlDocument;
+
+            HtmlElementCollection anchors = html.GetElementsByTagName("a");
+
+            foreach (HtmlElement a in anchors)
+            {
+                if (a.OuterText.Equals("Configuration"))
+                {
+                    a.InvokeMember("click");
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool navRCGateSetup()
+        {
+            HtmlDocument html;
+
+            while (webBrowser.IsLoaded.Equals(false))
+            {
+                System.Threading.Thread.Sleep(100);
+            }
+
+            html = webBrowser.Document as HtmlDocument;
+
+            HtmlElementCollection anchors = html.GetElementsByTagName("a");
+
+            foreach (HtmlElement a in anchors)
+            {
+                if (a.OuterText.Equals("Setup RC Gate"))
+                {
+                    a.InvokeMember("click");
+
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
