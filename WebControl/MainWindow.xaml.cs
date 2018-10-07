@@ -17,7 +17,7 @@ using System.Windows.Input;
 namespace WebControl
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Interaction logic for MainWindow.xaml 
     /// </summary>
     /// 
     ///Test
