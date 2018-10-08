@@ -148,7 +148,11 @@ namespace WebControl
 
         private void btnStart_Click(object sender, RoutedEventArgs e)
         {
-            gooTest();
+            clickLogin();
+            login();
+            navConfig();
+            navRCGateSetup();
+
         }
 
         //Bot Actions
@@ -254,121 +258,147 @@ namespace WebControl
         /// Navigates to the login screen and logs in as admin with default credentials
         /// </summary>
         /// <returns>a bool of success</returns>
-        private bool login()
+        private bool clickLogin()
         {
-            HtmlDocument html;
+            bool success = false;
+
+            string loginURL = "/web/guest/en/websys/webArch/authForm.cgi";
 
             while (webBrowser.IsLoaded.Equals(false))
             {
                 System.Threading.Thread.Sleep(100);
             }
 
-            if (isLoginAvailable())
+            HTMLDocument html = (HTMLDocument) webBrowser.Document;
+
+            if (html != null)
             {
-                html = webBrowser.Document as HtmlDocument;
+                IHTMLElementCollection anchors = (IHTMLElementCollection) html.getElementsByTagName("a");
 
-                HtmlElementCollection anchors = html.GetElementsByTagName("a");
-
-                string loginURL = "/web/guest/en/websys/webArch/authForm.cgi";
-
-                //find login anchor and invoke click
-                foreach (HtmlElement a in anchors)
+                foreach (IHTMLElement a in anchors)
                 {
-                    string href = a.GetAttribute("href");
+                    string href = a.getAttribute("href");
 
                     if (href.Contains(loginURL))
                     {
-                        a.InvokeMember("click");
-
+                        a.click();
                         break;
                     }
                 }
             }
+            else
+            {
+                System.Windows.MessageBox.Show("Null html");
+            }
+
+            return success;
+        }
+
+        private bool login()
+        {
+            bool success = false;
 
             while (webBrowser.IsLoaded.Equals(false))
             {
                 System.Threading.Thread.Sleep(100);
             }
 
-            html = webBrowser.Document as HtmlDocument;
+            HTMLDocument html = (HTMLDocument) webBrowser.Document;
 
-            HtmlElementCollection inputs = html.GetElementsByTagName("input");
-
-            //find input for User Name & input default username
-            foreach (HtmlElement input in inputs)
+            if (html != null)
             {
-                //find input for admin loging
-                if (input.Name.Contains("userid_work"))
-                {
-                    //set value attribute to admin
-                    input.SetAttribute("value", "admin");
-                }
+                IHTMLElementCollection inputs = (IHTMLElementCollection) html.getElementsByTagName("input");
 
+                //input admin login
+                foreach (IHTMLElement i in inputs)
+                {
+                    if (i.getAttribute("name").Equals("userid_work"))
+                    {
+                        i.innerText = "admin";
+                        break;
+                    }
+                }
+                //click submit
+                foreach (IHTMLElement i in inputs)
+                {
+                    if (i.getAttribute("value").Equals("Login"))
+                    {
+                        i.click();
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                System.Windows.MessageBox.Show("Null html");
             }
 
-            //find login input and invoke click
-            foreach (HtmlElement input in inputs)
-            {
-                if (input.GetAttribute("value").Equals("Login"))
-                {
-                    input.InvokeMember("click");
-                    return true;
-                }
-            }
-
-            return false;
+            return success;
         }
 
         private bool navConfig()
         {
-            HtmlDocument html;
+            bool success = false;
 
             while (webBrowser.IsLoaded.Equals(false))
             {
                 System.Threading.Thread.Sleep(100);
             }
 
-            html = webBrowser.Document as HtmlDocument;
+            HTMLDocument html = (HTMLDocument) webBrowser.Document;
 
-            HtmlElementCollection anchors = html.GetElementsByTagName("a");
-
-            foreach (HtmlElement a in anchors)
+            if (html != null)
             {
-                if (a.OuterText.Equals("Configuration"))
-                {
-                    a.InvokeMember("click");
+                IHTMLElementCollection anchors = (IHTMLElementCollection) html.getElementsByTagName("a");
 
-                    return true;
+                //input admin login
+                foreach (IHTMLElement a in anchors)
+                {
+                    if (a.innerText.Equals("Configuration"))
+                    {
+                        a.click();
+                        break;
+                    }
                 }
             }
+            else
+            {
+                System.Windows.MessageBox.Show("Null html");
+            }
 
-            return false;
+            return success;
         }
 
         private bool navRCGateSetup()
         {
-            HtmlDocument html;
+            bool success = false;
 
             while (webBrowser.IsLoaded.Equals(false))
             {
                 System.Threading.Thread.Sleep(100);
             }
 
-            html = webBrowser.Document as HtmlDocument;
+            HTMLDocument html = (HTMLDocument) webBrowser.Document;
 
-            HtmlElementCollection anchors = html.GetElementsByTagName("a");
-
-            foreach (HtmlElement a in anchors)
+            if (html != null)
             {
-                if (a.OuterText.Equals("Setup RC Gate"))
-                {
-                    a.InvokeMember("click");
+                IHTMLElementCollection anchors = (IHTMLElementCollection) html.getElementsByTagName("a");
 
-                    return true;
+                //input admin login
+                foreach (IHTMLElement a in anchors)
+                {
+                    if (a.innerText.Equals("Setup RC Gate"))
+                    {
+                        a.click();
+                        break;
+                    }
                 }
             }
-
-            return false;
+            else
+            {
+                System.Windows.MessageBox.Show("Null html");
+            }
+            return success;
         }
 
         private bool gooTest()
