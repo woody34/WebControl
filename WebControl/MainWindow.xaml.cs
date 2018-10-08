@@ -5,7 +5,18 @@ using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using mshtml;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+using System.Security.Permissions;
+using System.Windows.Threading;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+using System.Windows.Navigation;
+using System.Windows.Controls;
+using System.Reflection;
+using System.Threading;
+
 
 namespace WebControl
 {
@@ -126,7 +137,7 @@ namespace WebControl
             string[] values = csv.Split('\n', '\r');
             foreach (string ip in values)
             {
-                if( ip != "")
+                if (ip != "")
                 {
                     list.Add(ip);
                     Console.WriteLine(ip);
@@ -137,17 +148,7 @@ namespace WebControl
 
         private void btnStart_Click(object sender, RoutedEventArgs e)
         {
-            if (null == ipList && null == codeList)
-            {
-                return;
-            }
-            else
-            {
-                if (isLoginAvailable())
-                {
-                    login();
-                }
-            }
+            gooTest();
         }
 
         //Bot Actions
@@ -182,7 +183,7 @@ namespace WebControl
 
             HtmlElementCollection anchors = html.GetElementsByTagName("a");
 
-            foreach(HtmlElement a in anchors)
+            foreach (HtmlElement a in anchors)
             {
                 if (a.OuterText.Equals("Configuration"))
                 {
@@ -207,15 +208,15 @@ namespace WebControl
 
             HtmlElementCollection anchors = html.GetElementsByTagName("a");
 
-            foreach(HtmlElement a in anchors)
+            foreach (HtmlElement a in anchors)
             {
                 string href = a.GetAttribute("href");
-                
-                if(href.Contains(loginURL))
+
+                if (href.Contains(loginURL))
                 {
-                    isLogIn = true; 
+                    isLogIn = true;
                 }
-                 
+
             }
 
             return (isLogIn) ? true : false;
@@ -368,6 +369,48 @@ namespace WebControl
             }
 
             return false;
+        }
+
+        private bool gooTest()
+        {
+            bool success = false;
+
+            while (webBrowser.IsLoaded.Equals(false))
+            {
+                System.Threading.Thread.Sleep(100);
+            }
+
+            HTMLDocument html = (HTMLDocument) webBrowser.Document;
+
+            if (html != null)
+            {
+                IHTMLElementCollection inputs = (IHTMLElementCollection) html.getElementsByTagName("input");
+
+                foreach (IHTMLElement i in inputs)
+                {
+                    if (i.getAttribute("title") == "Search")
+                    {
+                        i.innerText = "Matt";
+                        
+                    }
+                }
+
+                foreach (IHTMLElement i in inputs)
+                {
+                    if (i.getAttribute("value") == "Google Search")
+                    {
+                        i.click();
+                        success = true;
+                    }
+                }
+
+            }
+            else
+            {
+                System.Windows.MessageBox.Show("Null html");
+            }
+
+            return success;
         }
     }
 }
