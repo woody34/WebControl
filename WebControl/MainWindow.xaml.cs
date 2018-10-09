@@ -143,7 +143,7 @@ namespace WebControl
 
             string rcGateURL = "/web/entry/en/websys/atRemote/atRemoteSetupGet.cgi";
 
-            webBrowser.Navigate("10.89.29.31" + LoginURL);
+            webBrowser.Navigate("http://" + "10.89.29.31" + LoginURL);
 
             login();
 
