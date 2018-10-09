@@ -27,6 +27,8 @@ namespace WebControl
     ///Test
     public partial class MainWindow : Window
     {
+        bool loadingStatus = false;
+
         string ipCSVPath;
         string remoteCodeCSVPath;
 
@@ -37,7 +39,12 @@ namespace WebControl
         {
 
             InitializeComponent();
+            webBrowser.LoadCompleted += PageLoadCompleted;
             webBrowser.Navigate("http://apycom.com/website-buttons/exframe.html");
+        }
+        void PageLoadCompleted(object sender, NavigationEventArgs e)
+        {
+            loadingStatus = true;
         }
 
         private void txtUrl_KeyUp(object sender, KeyEventArgs e)
@@ -165,7 +172,7 @@ namespace WebControl
 
         public bool waitForPageLoad()//todo setup timer for timeout or hook into page timeout
         {
-            while (webBrowser.IsLoaded.Equals(false))
+            while (!loadingStatus)
             {
                 System.Threading.Thread.Sleep(100);
             }
@@ -191,7 +198,6 @@ namespace WebControl
                     if (i.getAttribute("name").Equals("userid_work"))
                     {
                         i.innerText = "admin";
-                        break;
                     }
                 }
                 //click submit
@@ -199,14 +205,9 @@ namespace WebControl
                 {
                     if (i.getAttribute("value").Equals("Login"))
                     {
-                        i.click();
+                        loadingStatus = false;
 
-                        while (webBrowser.IsLoaded.Equals(false))
-                        {
-                            System.Threading.Thread.Sleep(100);
-                            break;
-                        }
-                        break;
+                        i.click();
                     }
                 }
             }
@@ -278,6 +279,8 @@ namespace WebControl
                 {
                     if (a.innerText == "Confirm")
                     {
+                        loadingStatus = false;
+
                         a.click();
 
                         waitForPageLoad();
@@ -310,6 +313,8 @@ namespace WebControl
                 {
                     if (a.innerText == "Program")
                     {
+                        loadingStatus = false;
+
                         a.click();
 
                         waitForPageLoad();
@@ -342,6 +347,8 @@ namespace WebControl
                 {
                     if (a.innerText == "Ok")
                     {
+                        loadingStatus = false;
+
                         a.click();
 
                         waitForPageLoad();
