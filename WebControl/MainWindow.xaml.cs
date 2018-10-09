@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
@@ -16,7 +15,8 @@ using System.Windows.Navigation;
 using System.Windows.Controls;
 using System.Reflection;
 using System.Threading;
-
+using HtmlAgilityPack;
+using System.Windows.Forms;
 
 namespace WebControl
 {
@@ -37,7 +37,7 @@ namespace WebControl
         {
 
             InitializeComponent();
-            webBrowser.Navigate("http://www.google.com");
+            webBrowser.Navigate("http://apycom.com/website-buttons/exframe.html");
         }
 
         private void txtUrl_KeyUp(object sender, KeyEventArgs e)
@@ -93,11 +93,6 @@ namespace WebControl
 
             if (choofdlog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                //System.IO.StreamReader sr = new
-                //System.IO.StreamReader(@choofdlog.FileName);
-                //System.Windows.MessageBox.Show(sr.ReadToEnd());
-                //sr.Close();
-
                 ipCSVPath = @choofdlog.FileName;
             }
 
@@ -120,11 +115,6 @@ namespace WebControl
 
             if (choofdlog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                //System.IO.StreamReader sr = new
-                //System.IO.StreamReader(@choofdlog.FileName);
-                //System.Windows.MessageBox.Show(sr.ReadToEnd());
-                //sr.Close();
-
                 remoteCodeCSVPath = choofdlog.FileName;
             }
 
@@ -132,6 +122,7 @@ namespace WebControl
 
             ParseCsv(temp, codeList);
         }
+
         private void ParseCsv(string csv, List<string> list)
         {
             string[] values = csv.Split('\n', '\r');
@@ -148,160 +139,45 @@ namespace WebControl
 
         private void btnStart_Click(object sender, RoutedEventArgs e)
         {
-            clickLogin();
+            string LoginURL = "/web/guest/en/websys/webArch/authForm.cgi";
+
+            string rcGateURL = "/web/entry/en/websys/atRemote/atRemoteSetupGet.cgi";
+
+            webBrowser.Navigate("10.89.29.31" + LoginURL);
+
             login();
-            navConfig();
-            navRCGateSetup();
 
-        }
+            webBrowser.Navigate("10.89.29.31" + rcGateURL);
 
-        //Bot Actions
-        private bool isPageWim()
-        {
-            HtmlDocument html = webBrowser.Document as HtmlDocument;
-
-            bool titleHasWebImageMonitor = false;
-
-            titleHasWebImageMonitor = (html.Title.Contains("Web Image Monitor")) ? true : false;
-
-            if (titleHasWebImageMonitor)
+            if (getRCGateStatus())
             {
-                return true;
+                //todo: remove item from list
             }
             else
             {
-                return false;
+                confirmCode("test"); //plugs in code and hits confirm
+
+                //programCode();
+                //todo: cofirm and program @remote with codes, if successful remove code from codelist
             }
         }
 
-        private bool isConfigAvailable()
-        {
-            HtmlDocument html;
 
+        public bool waitForPageLoad()//todo setup timer for timeout or hook into page timeout
+        {
             while (webBrowser.IsLoaded.Equals(false))
             {
                 System.Threading.Thread.Sleep(100);
             }
 
-            html = webBrowser.Document as HtmlDocument;
-
-            HtmlElementCollection anchors = html.GetElementsByTagName("a");
-
-            foreach (HtmlElement a in anchors)
-            {
-                if (a.OuterText.Equals("Configuration"))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Looks for the anchor tag to login
-        /// </summary>
-        /// <returns>true if anchor tag is present</returns>
-        private bool isLoginAvailable()
-        {
-            HtmlDocument html = webBrowser.Document as HtmlDocument;
-
-            bool isLogIn = false;
-
-            string loginURL = "/web/guest/en/websys/webArch/authForm.cgi";
-
-            HtmlElementCollection anchors = html.GetElementsByTagName("a");
-
-            foreach (HtmlElement a in anchors)
-            {
-                string href = a.GetAttribute("href");
-
-                if (href.Contains(loginURL))
-                {
-                    isLogIn = true;
-                }
-
-            }
-
-            return (isLogIn) ? true : false;
-        }
-
-        /// <summary>
-        /// Looks for the anchor tag to logout
-        /// </summary>
-        /// <returns>true if anchor tag is present</returns>
-        private bool isLogoutAvailable()
-        {
-            HtmlDocument html = webBrowser.Document as HtmlDocument;
-
-            bool isLoggedIn = false;
-
-            string logoutURL = "/web/entry/en/websys/webArch/logout.cgi";
-
-            HtmlElementCollection anchors = html.GetElementsByTagName("a");
-
-            foreach (HtmlElement a in anchors)
-            {
-                string href = a.GetAttribute("href");
-
-                if (href.Contains(logoutURL))
-                {
-                    isLoggedIn = true;
-                }
-
-            }
-
-            return (isLoggedIn) ? true : false;
-        }
-
-        /// <summary>
-        /// Navigates to the login screen and logs in as admin with default credentials
-        /// </summary>
-        /// <returns>a bool of success</returns>
-        private bool clickLogin()
-        {
-            bool success = false;
-
-            string loginURL = "/web/guest/en/websys/webArch/authForm.cgi";
-
-            while (webBrowser.IsLoaded.Equals(false))
-            {
-                System.Threading.Thread.Sleep(100);
-            }
-
-            HTMLDocument html = (HTMLDocument) webBrowser.Document;
-
-            if (html != null)
-            {
-                IHTMLElementCollection anchors = (IHTMLElementCollection) html.getElementsByTagName("a");
-
-                foreach (IHTMLElement a in anchors)
-                {
-                    string href = a.getAttribute("href");
-
-                    if (href.Contains(loginURL))
-                    {
-                        a.click();
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                System.Windows.MessageBox.Show("Null html");
-            }
-
-            return success;
+            return true;
         }
 
         private bool login()
         {
             bool success = false;
 
-            while (webBrowser.IsLoaded.Equals(false))
-            {
-                System.Threading.Thread.Sleep(100);
-            }
+            waitForPageLoad();
 
             HTMLDocument html = (HTMLDocument) webBrowser.Document;
 
@@ -324,6 +200,12 @@ namespace WebControl
                     if (i.getAttribute("value").Equals("Login"))
                     {
                         i.click();
+
+                        while (webBrowser.IsLoaded.Equals(false))
+                        {
+                            System.Threading.Thread.Sleep(100);
+                            break;
+                        }
                         break;
                     }
                 }
@@ -336,47 +218,87 @@ namespace WebControl
             return success;
         }
 
-        private bool navConfig()
+        private bool getRCGateStatus()
         {
-            bool success = false;
+            bool success = true; // returns true if it can't figure out if @ remote needs setup
 
-            while (webBrowser.IsLoaded.Equals(false))
-            {
-                System.Threading.Thread.Sleep(100);
-            }
+            waitForPageLoad();
 
             HTMLDocument html = (HTMLDocument) webBrowser.Document;
 
             if (html != null)
             {
-                IHTMLElementCollection anchors = (IHTMLElementCollection) html.getElementsByTagName("a");
+                IHTMLElementCollection inputs = (IHTMLElementCollection) html.getElementsByTagName("td");
 
-                //input admin login
-                foreach (IHTMLElement a in anchors)
+                foreach (IHTMLElement i in inputs)
                 {
-                    if (a.innerText.Equals("Configuration"))
+                    if (i.innerText == "Not Programmed")
                     {
-                        a.click();
-                        break;
+                        return success;
                     }
                 }
+
+                foreach (IHTMLElement i in inputs)
+                {
+                    if (i.innerText == "Registered")
+                    {
+                        return success;
+                    }
+                }
+
             }
             else
             {
                 System.Windows.MessageBox.Show("Null html");
             }
-
             return success;
         }
 
-        private bool navRCGateSetup()
+        private bool confirmCode( string activationCode)
         {
             bool success = false;
 
-            while (webBrowser.IsLoaded.Equals(false))
+            HTMLDocument html = (HTMLDocument) webBrowser.Document;
+
+            if (html != null)
             {
-                System.Threading.Thread.Sleep(100);
+                IHTMLElementCollection inputs = (IHTMLElementCollection) html.getElementsByTagName("input");
+
+                foreach (IHTMLElement i in inputs)
+                {
+                    if (i.getAttribute("name") == "letterNo")
+                    {
+                        i.innerText = activationCode;
+                    }
+                }
+
+                IHTMLElementCollection anchors = (IHTMLElementCollection) html.getElementsByTagName("a");
+
+                foreach (IHTMLElement a in anchors)
+                {
+                    if (a.innerText == "Confirm")
+                    {
+                        a.click();
+
+                        waitForPageLoad();
+
+                        clickOk();
+
+                        success = true;
+                    }
+                }
+
             }
+            else
+            {
+                System.Windows.MessageBox.Show("Null html");
+            }
+            return success;
+        }
+
+        private bool programCode()
+        {
+            bool success = false;
 
             HTMLDocument html = (HTMLDocument) webBrowser.Document;
 
@@ -384,20 +306,56 @@ namespace WebControl
             {
                 IHTMLElementCollection anchors = (IHTMLElementCollection) html.getElementsByTagName("a");
 
-                //input admin login
                 foreach (IHTMLElement a in anchors)
                 {
-                    if (a.innerText.Equals("Setup RC Gate"))
+                    if (a.innerText == "Program")
                     {
                         a.click();
-                        break;
+
+                        waitForPageLoad();
+
+                        clickOk();
+
+                        success = true;
                     }
                 }
+
             }
             else
             {
                 System.Windows.MessageBox.Show("Null html");
             }
+            return success;
+        }
+
+        private bool clickOk()
+        {
+            bool success = false;
+
+            HTMLDocument html = (HTMLDocument) webBrowser.Document;
+
+            if (html != null)
+            {
+                IHTMLElementCollection anchors = (IHTMLElementCollection) html.getElementsByTagName("a");
+
+                foreach (IHTMLElement a in anchors)
+                {
+                    if (a.innerText == "Ok")
+                    {
+                        a.click();
+
+                        waitForPageLoad();
+
+                        success = true;
+                    }
+                }
+
+            }
+            else
+            {
+                System.Windows.MessageBox.Show("Null html");
+            }
+
             return success;
         }
 
@@ -421,7 +379,7 @@ namespace WebControl
                     if (i.getAttribute("title") == "Search")
                     {
                         i.innerText = "Matt";
-                        
+
                     }
                 }
 
