@@ -41,8 +41,6 @@ namespace WebControl
 
             InitializeComponent();
 
-			//webBrowser.Loaded += PageLoadCompleted;
-
 			webBrowser.LoadCompleted += PageLoadCompleted;
 
 			webBrowser.Navigating += PageLoading;
@@ -50,17 +48,13 @@ namespace WebControl
 			webBrowser.MouseDown += PageLoading;
 
             webBrowser.Navigate("http://www.google.com");
+
+            this.Height = Screen.PrimaryScreen.Bounds.Height - 40;
+
+            this.Width = Screen.PrimaryScreen.Bounds.Width;
+
+            this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
 			
-        }
-        void PageLoadCompleted(object sender, RoutedEventArgs e)
-        {
-
-			loadingStatus = true;
-
-			//System.Windows.MessageBox.Show("loaded");
-
-			
-
         }
 
 		void PageLoadCompleted(object sender, NavigationEventArgs e)
@@ -68,9 +62,7 @@ namespace WebControl
 
 			loadingStatus = true;
 
-			//System.Windows.MessageBox.Show("loaded");
-
-
+			System.Windows.MessageBox.Show("loaded");
 
 		}
 
@@ -248,6 +240,8 @@ namespace WebControl
 			}
 			else
 			{
+
+
 				confirmCode("activationCode"); //plugs in code and hits confirm
 
 				waitForPageLoad();
