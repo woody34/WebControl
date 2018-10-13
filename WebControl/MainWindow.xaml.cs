@@ -224,6 +224,8 @@ namespace WebControl
 				}));
 			}
 
+			HTMLDocument frames = webBrowser.Document as HTMLDocument;
+
 			clickOk();
 
 			waitForPageLoad();
