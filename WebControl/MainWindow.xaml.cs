@@ -12,8 +12,8 @@ using System.Windows.Navigation;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Threading;
-using CefSharp;
-using CefSharp.Wpf;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
 using System.Net;
 
 namespace WebControl
@@ -189,7 +189,7 @@ namespace WebControl
 
         private void btnStart_Click(object sender, RoutedEventArgs e)
         {
-			t = new Thread(startBot);
+			t = new Thread(startSelenium);
 			t.Start();
         }
 
@@ -268,6 +268,91 @@ namespace WebControl
 
 			System.Windows.MessageBox.Show("Complete");
 
+			t.Abort();
+		}
+
+		public void startSelenium()
+		{
+			foreach (string ip in ipList)
+			{
+				string loginURL = "http://" + ip + "/web/guest/en/websys/webArch/authForm.cgi";
+
+				string rcGateURL = "http://" + ip + "/web/entry/en/websys/atRemote/atRemoteSetupGet.cgi";
+
+				ChromeOptions options = new ChromeOptions();
+
+				options.AddArgument("test-type");
+
+				IWebDriver driver = new ChromeDriver(options);
+
+				driver.Navigate().GoToUrl(loginURL);
+
+				if (driver.Url.EndsWith("message.cgi"))
+				{
+					//driver.FindElement(By.XPath("//a[@href = 'javascript:jumpButtonURL()']")).Click();
+					driver.Navigate().GoToUrl(loginURL);
+				}
+
+				driver.FindElement(By.Name("userid_work")).SendKeys("admin");
+
+				driver.FindElement(By.XPath("//input[@type = 'submit']")).Click();
+
+				driver.Navigate().GoToUrl(rcGateURL);
+
+				var notProg = driver.FindElement(By.XPath("//td[text()='Not Programmed']"));
+
+				var registered = driver.FindElement(By.XPath("//td[text()='Registered']"));
+
+				if(registered != null)
+				{
+					//todo:Already Registered Handling
+
+					
+				}
+
+				if (notProg != null)
+				{
+					string code = codeList.Last();
+
+					driver.FindElement(By.Name("letterNo")).Clear();
+
+					driver.FindElement(By.Name("letterNo")).SendKeys(code);
+
+					codeList.Remove(code);
+
+					driver.FindElement(By.XPath("//a[@href='javascript:refer()']")).Click();
+
+					if (driver.Url.EndsWith("atRemoteSetupRefer.cgi"))
+					{
+						var error = driver.FindElement(By.XPath("//a[@href='javascript:okInput()']"));
+
+						if(error != null)
+						{
+							driver.FindElement(By.XPath("//a[@href='javascript:okInput()']")).Click();
+
+							//todo:add error handling
+						}
+
+						var success = driver.FindElement(By.XPath("//a[@href='javascript:ok()']"));
+
+						if(success != null)
+						{
+							driver.FindElement(By.XPath("//a[@href='javascript:ok()']")).Click();
+
+							//javascript:regist()
+
+							driver.FindElement(By.XPath("//a[@href='javascript:regist()']")).Click();
+
+							//todo: add to complete list
+
+						}
+					}
+					var a = 1;
+
+					driver.FindElement(By.XPath("//a[@href='javascript:regist()']")).Click();
+				}
+				driver.Dispose();
+			}
 			t.Abort();
 		}
 
