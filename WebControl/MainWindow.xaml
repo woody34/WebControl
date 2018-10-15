@@ -1,29 +1,43 @@
 ﻿<Window x:Class="WebControl.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:my="clr-namespace:System.Windows.Forms.Integration;assembly=WindowsFormsIntegration"
+        xmlns:wb="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms"
         Title="WebBrowser" Height="300" Width="1200">
     <Window.CommandBindings>
         <CommandBinding Command="NavigationCommands.BrowseBack" CanExecute="BrowseBack_CanExecute" Executed="BrowseBack_Executed" />
         <CommandBinding Command="NavigationCommands.BrowseForward" CanExecute="BrowseForward_CanExecute" Executed="BrowseForward_Executed" />
         <CommandBinding Command="NavigationCommands.GoToPage" CanExecute="GoToPage_CanExecute" Executed="GoToPage_Executed" />
     </Window.CommandBindings>
-    <DockPanel>
-        <ToolBar DockPanel.Dock="Top">
-            <Button Command="NavigationCommands.BrowseBack" Content="B" />
-            <Button Command="NavigationCommands.BrowseForward" Content="F" />
-            <Separator />
-            <TextBox Name="txtUrl" Width="300" KeyUp="txtUrl_KeyUp" />
-            <Button Command="NavigationCommands.GoToPage" Content="Go"/>
-        </ToolBar>
+
+        <DockPanel x:Name="Dock">
+            <ToolBar DockPanel.Dock="Top">
+                <Button Command="NavigationCommands.BrowseBack" Content="B" />
+                <Button Command="NavigationCommands.BrowseForward" Content="F" />
+                <Separator />
+                <TextBox Name="txtUrl" Width="300" KeyUp="txtUrl_KeyUp" />
+                <Button Command="NavigationCommands.GoToPage" Content="Go"/>
+                <Label Content="IP List(CSV):" />
+                <Button Name="btnIP" Content="Browse" Click="btnIP_Click" />
+                <Label Content="Codes(CSV):" />
+                <Button Name ="btnRemoteCodes" Content="Browse" Click="btnRemoteCodes_Click"/>
+                <CheckBox Name="ckboxActivateRemote">@remote</CheckBox>
+                <CheckBox Name="ckboxCounter">Conter</CheckBox>
+                <Button Name="btnStart" Content="Start" Click="btnStart_Click" />
+                <Label>IP</Label>
+                <TextBox x:Name="IP" Width="100">255.255.255.255</TextBox>
+                <Label>Model</Label>
+                <TextBox x:Name="Model" Width="100">Unknown</TextBox>
+                <Label>Serial</Label>
+                <TextBox x:Name="Serial" Width="200">Unkwown</TextBox>
+                <Label>Counter</Label>
+                <TextBox Width="50">Unkown</TextBox>
+                <Label>Code</Label>
+                <TextBox x:Name="Code" Width="200"></TextBox>
+            </ToolBar>
         <ToolBar DockPanel.Dock="Bottom">
-            <Label Content="IP List(CSV):" />
-            <Button Name="btnIP" Content="Browse" Click="btnIP_Click" />
-            <Label Content="@remote Codes(CSV):" />
-            <Button Name ="btnRemoteCodes" Content="Browse" Click="btnRemoteCodes_Click"/>
-            <CheckBox Name="ckboxActivateRemote">@remote</CheckBox>
-            <CheckBox Name="ckboxCounter">Conter</CheckBox>
-            <Button Name="btnStart" Content="Start" Click="btnStart_Click" />
+
         </ToolBar>
-        <WebBrowser Name="webBrowser" Navigating="webBrowser_Navigating"  />
+        <WebBrowser Name="webBrowser" Navigating="webBrowser_Navigating" />
     </DockPanel>
 </Window>

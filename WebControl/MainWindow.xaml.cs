@@ -12,6 +12,9 @@ using System.Windows.Navigation;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Threading;
+using CefSharp;
+using CefSharp.Wpf;
+using System.Net;
 
 namespace WebControl
 {
@@ -36,10 +39,14 @@ namespace WebControl
 
         List<string> codeList = new List<string>();
 
-        public MainWindow()
+		List<string> Completed = new List<string>();
+
+		List<string> Failed = new List<string>();
+
+		public MainWindow()
         {
 
-            InitializeComponent();
+            InitializeComponent();			
 
 			webBrowser.LoadCompleted += PageLoadCompleted;
 
@@ -54,15 +61,15 @@ namespace WebControl
             this.Width = Screen.PrimaryScreen.Bounds.Width;
 
             this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-			
-        }
+
+		}
 
 		void PageLoadCompleted(object sender, NavigationEventArgs e)
 		{
 
 			loadingStatus = true;
 
-			System.Windows.MessageBox.Show("loaded");
+			//System.Windows.MessageBox.Show("loaded");
 
 		}
 
@@ -79,7 +86,6 @@ namespace WebControl
 		{
 			loadingStatus = false;
 		}
-
 
 		private void txtUrl_KeyUp(object sender, KeyEventArgs e)
         {
@@ -147,8 +153,6 @@ namespace WebControl
             ParseCsv(temp, ipList);
         }
 
-
-
         private void btnRemoteCodes_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog choofdlog = new OpenFileDialog();
@@ -189,85 +193,105 @@ namespace WebControl
 			t.Start();
         }
 
-
 		public void startBot()
 		{
-			string LoginURL = "http://10.89.29.31/web/guest/en/websys/webArch/authForm.cgi";
-
-			string rcGateURL = "http://10.89.29.31/web/entry/en/websys/atRemote/atRemoteSetupGet.cgi";
-
-			Dispatcher.Invoke(new Action(() => {
-
-				webBrowser.Navigate(LoginURL);
-
-			}));
-
-			Thread.Sleep(5000);
-
-			if(recentURL != LoginURL)
+			foreach(string ip in ipList)
 			{
+				string loginURL = "http://" + ip + "/web/guest/en/websys/webArch/authForm.cgi";
 
-				clickOk();
+				string rcGateURL = "http://" + ip + "/web/entry/en/websys/atRemote/atRemoteSetupGet.cgi";
 
 				Dispatcher.Invoke(new Action(() => {
 
-					webBrowser.Navigate(LoginURL);
+					webBrowser.Navigate(loginURL);
 
 				}));
+
+				waitForPageLoad();
+
+				bool httpsMatch = (recentURL.StartsWith("https")) ? true : false;
+
+				if (httpsMatch)//upon https detection we will have a certificate error and have to skill this one for now
+				{
+					AddtoFailedIP(ip);
+
+					break;
+				}
+
+				bool msgCheck = (recentURL.EndsWith("message.cgi")) ? true : false;
+
+				//clickOk();
+
+				waitForPageLoad();
+
+				Dispatcher.Invoke(new Action(() => {
+
+					webBrowser.Navigate(loginURL);
+
+				}));
+
+				waitForPageLoad();
+
+				login();
+
+				waitForPageLoad();
+
+				Dispatcher.Invoke(new Action(() => {
+
+					webBrowser.Navigate(rcGateURL);
+
+				}));
+
+				waitForPageLoad();
+
+				if (getRCGateStatus())
+				{
+					AddToCompleted(ip);
+				}
+				else
+				{
+					string code = codeList.Last();
+
+					codeList.Remove(code);
+
+					confirmCode(code);
+
+					waitForPageLoad();
+
+					programCode();
+
+					AddToCompleted(ip);
+
+				}
+
 			}
 
-			HTMLDocument frames = webBrowser.Document as HTMLDocument;
+			System.Windows.MessageBox.Show("Complete");
 
-			clickOk();
-
-			waitForPageLoad();
-
-			login();
-
-			waitForPageLoad();
-
-			Dispatcher.Invoke(new Action(() => {
-
-				webBrowser.Navigate(rcGateURL);
-
-			}));
-
-			waitForPageLoad();
-
-			if (getRCGateStatus())
-			{
-				//todo: remove item from list
-			}
-			else
-			{
-
-
-				confirmCode("activationCode"); //plugs in code and hits confirm
-
-				waitForPageLoad();
-
-				clickOk();
-
-				waitForPageLoad();
-
-				programCode();
-
-				waitForPageLoad();
-
-				clickOk();
-
-				waitForPageLoad();
-
-				System.Windows.MessageBox.Show(getRCGateStatus().ToString());
-				//todo: cofirm and program @remote with codes, if successful remove code from codelist
-			}
+			t.Abort();
 		}
 
-        public bool waitForPageLoad()//todo setup timer for timeout or hook into page timeout
+		private void AddToCompleted(string ip)
+		{
+			Completed.Add(ip);
+		}
+
+		private void AddtoFailedIP(string ip)
+		{
+			Failed.Add(ip);
+		}
+
+		private void saveListToCSV(List <string> list)
+		{
+			string csv = String.Join("/n", list);
+
+		}
+
+		public bool waitForPageLoad()//todo setup timer for timeout or hook into page timeout
         {
 			bool load = false;
 
-			Thread.Sleep(2000);
+			int count = 0;
 
 			Dispatcher.Invoke(new Action(() =>
 			{
@@ -276,9 +300,9 @@ namespace WebControl
 
 			}));
 
-			while (!load)
+			while (!load && count < 30 )
 			{
-				Thread.Sleep(1000);
+				Thread.Sleep(5000);
 
 				Dispatcher.Invoke(new Action(() =>
 				{
@@ -286,17 +310,58 @@ namespace WebControl
 					load = loadingStatus;
 
 				}));
+
+				count++;
 			}
-
-			//Dispatcher.Invoke(new Action(() =>
-			//{
-
-			//	loadingStatus = load;
-
-			//}));
 
 			return true;
         }
+
+		private bool CheckSSLError()
+		{
+			bool success = true; // returns true if it can't figure out if @ remote needs setup
+
+			Dispatcher.Invoke(new Action(() => {
+
+				HTMLDocument html = (HTMLDocument)webBrowser.Document;
+
+				if (html != null)
+				{
+					bool certError = (html.title.StartsWith("Certificate Error")) ? true : false;
+
+					if (certError)
+					{
+						IHTMLElementCollection anchors = (IHTMLElementCollection)html.getElementsByTagName("a");
+
+						foreach (IHTMLElement a in anchors)
+						{
+							if (a.id == "overridelink")
+							{
+								try
+								{
+									a.click();
+								}
+								catch (Exception e)
+								{
+									System.Windows.MessageBox.Show("error");
+								}
+								
+
+								success = true;
+	
+							}
+						}
+					}
+				}
+				else
+				{
+					System.Windows.MessageBox.Show("Null html");
+				}
+
+			}));
+
+			return success;
+		}
 
         private bool login()
         {
@@ -364,17 +429,23 @@ namespace WebControl
 
 					foreach (IHTMLElement i in inputs)
 					{
-						if (i.innerText == "Not Programmed")
+						if(i.innerText != null)
 						{
-							success = false;
+							if (i.innerText == "Not Programmed")
+							{
+								success = false;
+							}
 						}
 					}
 
 					foreach (IHTMLElement i in inputs)
 					{
-						if (i.innerText == "Registered")
+						if (i.innerText != null)
 						{
-							success = true;
+							if (i.innerText == "Registered")
+							{
+								success = true;
+							}
 						}
 					}
 
@@ -413,15 +484,22 @@ namespace WebControl
 
 					foreach (IHTMLElement a in anchors)
 					{
-						if (a.innerText == "Confirm")
+						if(a.innerText != null)
 						{
-							a.click();
+							if (a.innerText == "Confirm")
+							{
+								a.click();
 
-							waitForPageLoad();
+								//Thread.Sleep(45000);
 
-							clickOk();
+								waitForPageLoad();
 
-							success = true;
+								clickOk();
+
+								waitForPageLoad();
+
+								success = true;
+							}
 						}
 					}
 
@@ -450,15 +528,20 @@ namespace WebControl
 
 					foreach (IHTMLElement a in anchors)
 					{
-						if (a.innerText == "Program")
+						if(a.innerText != null)
 						{
-							a.click();
+							if (a.innerText == "Program")
+							{
+								a.click();
 
-							waitForPageLoad();
+								waitForPageLoad();
 
-							clickOk();
+								clickOk();
 
-							success = true;
+								waitForPageLoad();
+
+								success = true;
+							}
 						}
 					}
 
@@ -487,12 +570,17 @@ namespace WebControl
 
 					foreach (IHTMLElement a in anchors)
 					{
-						if (a.innerText == "Ok")
+						if(a.innerText != null)
 						{
+							if (a.innerText == "OK" || a.innerText == "Ok")
+							{
 
-							a.click();
+								a.click();
 
-							success = true;
+								waitForPageLoad();
+
+								success = true;
+							}
 						}
 					}
 
@@ -503,48 +591,6 @@ namespace WebControl
 				}
 
 			}));
-
-            return success;
-        }
-
-        private bool gooTest()
-        {
-            bool success = false;
-
-            while (webBrowser.IsLoaded.Equals(false))
-            {
-                System.Threading.Thread.Sleep(100);
-            }
-
-            HTMLDocument html = (HTMLDocument) webBrowser.Document;
-
-            if (html != null)
-            {
-                IHTMLElementCollection inputs = (IHTMLElementCollection) html.getElementsByTagName("input");
-
-                foreach (IHTMLElement i in inputs)
-                {
-                    if (i.getAttribute("title") == "Search")
-                    {
-                        i.innerText = "Matt";
-
-                    }
-                }
-
-                foreach (IHTMLElement i in inputs)
-                {
-                    if (i.getAttribute("value") == "Google Search")
-                    {
-                        i.click();
-                        success = true;
-                    }
-                }
-
-            }
-            else
-            {
-                System.Windows.MessageBox.Show("Null html");
-            }
 
             return success;
         }
