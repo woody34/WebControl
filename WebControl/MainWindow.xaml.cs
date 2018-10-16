@@ -10,7 +10,6 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using System.Data;
 using System.Text;
-
 namespace WebControl
 {
     /// <summary>
@@ -138,6 +137,21 @@ namespace WebControl
 
 						listError.Items.Add(new MyItem { Ip = ip.ToString(), Code = "Na" });
 
+						string subPath = System.IO.Path.GetDirectoryName(System.Windows.Forms.Application.ExecutablePath) + @"\ss\";
+
+						Screenshot ss = ((ITakesScreenshot)driver).GetScreenshot();
+
+						string screenshot = ss.AsBase64EncodedString;
+
+						byte[] screenshotAsByteArray = ss.AsByteArray;
+
+						if (!System.IO.Directory.Exists(subPath))
+						{
+							System.IO.Directory.CreateDirectory(subPath);
+						}
+
+						ss.SaveAsFile(subPath + ip + "-error.png");
+
 					}));
 				}
 
@@ -192,6 +206,21 @@ namespace WebControl
 										listError.Items.Add(new MyItem { Ip = ip, Code = "Na" });
 
 									}));
+
+									string subPath = System.IO.Path.GetDirectoryName(System.Windows.Forms.Application.ExecutablePath) + @"\ss\";
+
+									Screenshot ss = ((ITakesScreenshot)driver).GetScreenshot();
+
+									string screenshot = ss.AsBase64EncodedString;
+
+									byte[] screenshotAsByteArray = ss.AsByteArray;
+
+									if (!System.IO.Directory.Exists(subPath))
+									{
+										System.IO.Directory.CreateDirectory(subPath);
+									}
+
+									ss.SaveAsFile(subPath + ip + "-error.png");
 									//todo:add error handling
 								}
 							}
