@@ -8,6 +8,8 @@ using System.Windows.Forms;
 using System.Threading;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using System.Data;
+using System.Text;
 
 namespace WebControl
 {
@@ -26,10 +28,6 @@ namespace WebControl
 		List<string> ipList = new List<string>();
 
         List<string> codeList = new List<string>();
-
-		List<string> Completed = new List<string>();
-
-		List<string> Failed = new List<string>();
 
 		public MainWindow()
         {
@@ -245,24 +243,77 @@ namespace WebControl
 			System.Windows.MessageBox.Show("Complete");
 		}
 
-		private void AddToCompleted(string ip)
+		private void btnSaveComplete_Click(object sender, RoutedEventArgs e)
 		{
-			Completed.Add(ip);
+			try
+			{
+				DataTable table = new DataTable();
+				table.Columns.Add("Ip");
+				table.Columns.Add("Code");
+				foreach (MyItem item in listCompleted.Items)
+				{
+					table.Rows.Add(item.Ip, item.Code);
+				}
+
+				CreateCSVFile(table, System.IO.Path.GetDirectoryName(System.Windows.Forms.Application.ExecutablePath) + @"\complete.csv");
+			}
+			catch(Exception err){ System.Windows.MessageBox.Show(err.Message); }
 		}
 
-		private void AddtoFailedIP(string ip)
+		private void btnSaveError_Click(object sender, RoutedEventArgs e)
 		{
-			Failed.Add(ip);
+			try
+			{
+				DataTable table = new DataTable();
+
+				table.Columns.Add("Ip");
+				table.Columns.Add("Code");
+				foreach (MyItem item in listCompleted.Items)
+				{
+					table.Rows.Add(item.Ip, item.Code);
+				}
+
+				CreateCSVFile(table, System.IO.Path.GetDirectoryName(System.Windows.Forms.Application.ExecutablePath) + @"\error.csv");
+			}
+			catch { }
 		}
 
-		private void saveListToCSV(List <string> list)
+		public void CreateCSVFile(DataTable dt, string strFilePath)
 		{
-			string csv = String.Join("/n", list);
+			StreamWriter sw = new StreamWriter(strFilePath, false);
+
+			int iColCount = dt.Columns.Count;
+			for (int i = 0; i < iColCount; i++)
+			{
+				sw.Write(dt.Columns[i]);
+				if (i < iColCount - 1)
+				{
+					sw.Write(",");
+				}
+			}
+			sw.Write(sw.NewLine);
+
+			foreach (DataRow dr in dt.Rows)
+			{
+				for (int i = 0; i < iColCount; i++)
+				{
+					if (!Convert.IsDBNull(dr[i]))
+					{
+						sw.Write(dr[i].ToString());
+					}
+					if (i < iColCount - 1)
+					{
+						sw.Write(",");
+					}
+				}
+				sw.Write(sw.NewLine);
+			}
+			sw.Close();
+		}
 
 		}
-    }
 }
-public class MyItem
+public class MyItem : ListViewItem
 {
 	public string Ip { get; set; }
 
