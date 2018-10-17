@@ -1,40 +1,61 @@
 ﻿<Window x:Class="WebControl.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="WebBrowser" Height="200" Width="500">
+        Title="Ricoh WIM @Remote Activation Assistant" Height="600" Width="800">
 
     <DockPanel x:Name="Dock">
         <ToolBar DockPanel.Dock="Top">
-            <Label Content="IP List(CSV):" />
-                <Button Name="btnIP" Content="Browse" Click="btnIP_Click" />
-                <Label Content="Codes(CSV):" />
-                <Button Name ="btnRemoteCodes" Content="Browse" Click="btnRemoteCodes_Click"/>
-                <Button Name="btnStart" Content="Start" Click="btnStart_Click" />
-            <Hyperlink NavigateUri="http://www.github.com/woody34">woody34@github.com</Hyperlink>
-
+            <Button Name="btnIP" Content="import(iplist.csv)" Click="btnIP_Click" />
+            <Button Name ="btnRemoteCodes" Content="import(codes.csv)" Click="btnRemoteCodes_Click"/>
+            <Label Content="User:"/>
+            <TextBox x:Name="textboxUsername" Width="60">admin</TextBox>
+            <Label Content="Pass:"/>
+            <TextBox x:Name="textboxPassword" Width="60"></TextBox>
+            <Button Name="btnStart" Content="Start" Click="btnStart_Click"/>
+            <Label Width="100"></Label>
+            <Hyperlink NavigateUri="http://www.github.com/woody34" Click="link_Click" BaselineAlignment="Superscript">github.com/woody34</Hyperlink>
         </ToolBar>
         <ToolBar DockPanel.Dock="Bottom">
             <StackPanel HorizontalAlignment="Left">
-                <Button x:Name="btnSaveCompleted" Content="Save Complete" Click="btnSaveComplete_Click"/>
-                <ListView Name="listCompleted" Height="Auto">
-                    <ListView.View>
-                        <GridView>
-                            <GridViewColumn x:Name="completeIP" Header="Ip" DisplayMemberBinding="{Binding Ip}"/>
-                            <GridViewColumn x:Name="completeCode" Header="Code" DisplayMemberBinding="{Binding Code}"/>
-                        </GridView>
-                    </ListView.View>
-                </ListView>
+                <Button x:Name="btnSaveCompleted" Content="Save (complete.csv)" Click="btnSaveComplete_Click"/>
+                <ScrollViewer>
+                    <ListView Name="listCompleted" Height="500">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn x:Name="completeIP" Header="Ip" DisplayMemberBinding="{Binding Ip}"/>
+                                <GridViewColumn x:Name="completeCode" Header="Code" DisplayMemberBinding="{Binding Code}"/>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+
+                </ScrollViewer>
             </StackPanel>
             <StackPanel HorizontalAlignment="Right">
-                <Button x:Name="btnSaveError" Content="Save Error" Click="btnSaveError_Click"/>
-                <ListView Name="listError" Height="Auto">
-                    <ListView.View>
-                        <GridView>
-                            <GridViewColumn x:Name="errorIP" Header="Ip" DisplayMemberBinding="{Binding Ip}"/>
-                            <GridViewColumn x:Name="errorCode" Header="Code" DisplayMemberBinding="{Binding Code}"/>
-                        </GridView>
-                    </ListView.View>
-                </ListView>
+                <Button x:Name="btnSaveError" Content="Save (error.csv)" Click="btnSaveError_Click"/>
+                <ScrollViewer>
+                    <ListView Name="listError" Height="500">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn x:Name="errorIP" Header="Ip" DisplayMemberBinding="{Binding Ip}"/>
+                                <GridViewColumn x:Name="errorCode" Header="Code" DisplayMemberBinding="{Binding Code}"/>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+
+                </ScrollViewer>
+            </StackPanel>
+            <StackPanel HorizontalAlignment="Right">
+                <Button x:Name="btnSaveLog" Content="Log" Click="btnSaveLog_Click"/>
+                <ScrollViewer>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="75*"/>
+                            <ColumnDefinition Width="14*"/>
+                            <ColumnDefinition Width="61*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Height="500" Width="450" x:Name="TestBox" Grid.ColumnSpan="3"/>
+                    </Grid>
+                </ScrollViewer>
             </StackPanel>
 
         </ToolBar>
